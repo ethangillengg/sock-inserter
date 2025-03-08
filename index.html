@@ -24,7 +24,11 @@
         </div>
       </div>
       <div class="flex items-baseline gap-2">
-        <div x-data x-text="$store.currentSession.name"></div>
+        <div
+          x-data
+          x-text="$store.currentSession.name"
+          x-bind:title="$store.allSessionIds.getSessionDate($store.currentSession.id)"
+        ></div>
         <button
           x-data
           @click="$store.currentSession.newSession"

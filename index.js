@@ -17,8 +17,11 @@ document.addEventListener("alpine:init", () => {
       return id;
     },
     getSessionDate(id) {
-      const sess = JSON.parse(localStorage[id] ?? "[]");
-      if (!sess.length) {
+      if (!localStorage[id]) {
+        return "N/A";
+      }
+      const sess = JSON.parse(localStorage[id])?.lines;
+      if (!sess) {
         return "N/A";
       }
 
