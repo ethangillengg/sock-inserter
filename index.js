@@ -111,9 +111,7 @@ document.addEventListener("alpine:init", () => {
         return;
       }
       localStorage[keys.curr] = event.target.value;
-      setTimeout(() => {
-        location.reload();
-      }, 10);
+      location.reload();
     },
   });
 
