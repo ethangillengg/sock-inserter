@@ -11,6 +11,7 @@
     <script src="//unpkg.com/alpinejs" defer></script>
     <script type="text/javascript" src="index.js"></script>
   </head>
+
   <body class="px-4 pb-32 bg-slate-950 text-slate-100 text-2xl">
     <div
       class="right-0 flex justify-between gap-2 bg-slate-950 sticky top-0 border-b py-4 mb-4"
@@ -24,11 +25,6 @@
         </div>
       </div>
       <div class="flex items-baseline gap-2">
-        <div
-          x-data
-          x-text="$store.currentSession.name"
-          x-bind:title="$store.allSessionIds.getSessionDate($store.currentSession.id)"
-        ></div>
         <button
           x-data
           @click="$store.currentSession.newSession"
@@ -36,6 +32,23 @@
         >
           New
         </button>
+        <select
+          x-data
+          @change="$store.currentSession.change"
+          value="40cc9a40"
+          :title="$store.allSessionIds.getSessionDate($store.currentSession.id)"
+          class="max-w-128 min-w-48 w-full"
+        >
+          <template x-for="id in $store.allSessionIds.ids" :key="id">
+            <option
+              x-text="$store.allSessionIds.getSessionName(id)"
+              x-data
+              :value="id"
+              :selected="id === $store.currentSession.id"
+              class="text-black"
+            ></option>
+          </template>
+        </select>
       </div>
       <div class="flex gap-2 items-center">
         <div
@@ -64,3 +77,4 @@
     </div>
   </body>
 </html>
+

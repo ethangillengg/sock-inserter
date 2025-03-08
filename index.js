@@ -31,6 +31,23 @@ document.addEventListener("alpine:init", () => {
       }
       return new Date(lastEntry.date);
     },
+    getSessionName(id) {
+      if (!localStorage[id]) {
+        return id.split("-")[0];
+      }
+      const sess = JSON.parse(localStorage[id]);
+
+      if (!sess?.name?.length) {
+        console.log("no length");
+        return id.split("-")[0];
+      }
+
+      const date = this.getSessionDate(id);
+      if (!date) {
+        return sess.name;
+      }
+      return `${new Intl.DateTimeFormat("en-US").format(date)} - ${sess.name}`;
+    },
   });
 
   let id = localStorage[keys.curr];
@@ -44,12 +61,6 @@ document.addEventListener("alpine:init", () => {
   Alpine.store(keys.curr, {
     id,
     session,
-    get name() {
-      if (!this.session?.name?.length) {
-        return this.id.split("-")[0];
-      }
-      return this.session.name;
-    },
     get lineCount() {
       return this.session?.lines?.length ?? 0;
     },
@@ -80,6 +91,14 @@ document.addEventListener("alpine:init", () => {
       console.log("removing", id);
       this.session.lines = this.session?.lines.filter((x) => x.id !== id);
       this._setSession(this.session);
+    },
+    change(event) {
+      if (!event.target.value) {
+        console.warn("change session event had no value");
+        return;
+      }
+      localStorage[keys.curr] = event.target.value;
+      location.reload();
     },
   });
 
@@ -114,7 +133,6 @@ document.addEventListener("alpine:init", () => {
     ) {
       return;
     }
-    console.log(event.data);
     const item = {
       id: self.crypto.randomUUID(),
       date: new Date(),
