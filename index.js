@@ -1,4 +1,4 @@
-const port = 6111;
+const port = 6009;
 const keys = {
   curr: "currentSession",
   all: "allSessionIds",
@@ -38,13 +38,16 @@ document.addEventListener("alpine:init", () => {
     id = Alpine.store(keys.all).getNewSession();
     localStorage[keys.curr] = id;
   }
-  const session = JSON.parse(localStorage[id] ?? '{"name":"N/A","lines":[]}');
+  const session = JSON.parse(localStorage[id] ?? '{"name":"","lines":[]}');
   console.log("initial", id, session);
 
   Alpine.store(keys.curr, {
     id,
     session,
     get name() {
+      if (!this.session?.name?.length) {
+        return this.id.split("-")[0];
+      }
       return this.session.name;
     },
     get lineCount() {
@@ -70,6 +73,7 @@ document.addEventListener("alpine:init", () => {
       this.session = [];
       this.id = newId;
       localStorage[keys.curr] = newId;
+      location.reload();
     },
     removeLine(id) {
       if (!id) return;
