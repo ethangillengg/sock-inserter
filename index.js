@@ -1,4 +1,4 @@
-const port = 6009;
+const port = 6111;
 const keys = {
   curr: "currentSession",
   all: "allSessionIds",
@@ -7,7 +7,7 @@ const keys = {
 document.addEventListener("alpine:init", () => {
   const allSessionIds = JSON.parse(localStorage[keys.all] ?? "[]");
   Alpine.store(keys.all, {
-    allSessionIds,
+    ids: allSessionIds,
     getNewSession() {
       const id = self.crypto.randomUUID();
       allSessionIds.push(id);
@@ -16,6 +16,18 @@ document.addEventListener("alpine:init", () => {
       console.log("new sess", id);
       return id;
     },
+    getSessionDate(id) {
+      const sess = JSON.parse(localStorage[id] ?? "[]");
+      if (!sess.length) {
+        return "N/A";
+      }
+
+      const lastEntry = sess[sess.length - 1];
+      if (!lastEntry.date) {
+        return "N/A";
+      }
+      return new Date(lastEntry.date);
+    },
   });
 
   let id = localStorage[keys.curr];
@@ -23,18 +35,21 @@ document.addEventListener("alpine:init", () => {
     id = Alpine.store(keys.all).getNewSession();
     localStorage[keys.curr] = id;
   }
-  const session = JSON.parse(localStorage[id] ?? "[]");
+  const session = JSON.parse(localStorage[id] ?? '{"name":"N/A","lines":[]}');
   console.log("initial", id, session);
 
   Alpine.store(keys.curr, {
     id,
     session,
+    get name() {
+      return this.session.name;
+    },
     get lineCount() {
-      return this.session?.length ?? 0;
+      return this.session?.lines?.length ?? 0;
     },
     get charCount() {
       return (
-        this.session?.reduce((sum, item) => {
+        this.session?.lines?.reduce((sum, item) => {
           return sum + item.text.replace(/[「」…]/g, "").length;
         }, 0) ?? 0
       );
@@ -56,7 +71,8 @@ document.addEventListener("alpine:init", () => {
     removeLine(id) {
       if (!id) return;
       console.log("removing", id);
-      this._setSession(this.session.filter((x) => x.id !== id));
+      this.session.lines = this.session?.lines.filter((x) => x.id !== id);
+      this._setSession(this.session);
     },
   });
 
@@ -85,10 +101,9 @@ document.addEventListener("alpine:init", () => {
       return;
     }
     const currentSession = Alpine.store(keys.curr).session;
-
     if (
       !event.data ||
-      event.data === currentSession[currentSession.length - 1]?.text
+      event.data === currentSession.lines[currentSession.lines.length - 1]?.text
     ) {
       return;
     }
@@ -98,7 +113,7 @@ document.addEventListener("alpine:init", () => {
       date: new Date(),
       text: event.data,
     };
-    currentSession.push(item);
+    currentSession.lines.push(item);
     Alpine.store(keys.curr)._setSession(currentSession);
 
     window.scrollTo({
