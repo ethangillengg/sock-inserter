@@ -4,14 +4,23 @@ const keys = {
   all: "allSessionIds",
 };
 
+function getSessionId() {
+  const id = self.crypto.randomUUID();
+  const res = `${Date.now()}-${id}`;
+  console.log(res);
+  return res;
+}
+
 document.addEventListener("alpine:init", () => {
-  const allSessionIds = JSON.parse(localStorage[keys.all] ?? "[]");
+  const allSessionIds = Object.keys(localStorage)
+    .filter((k) => !Object.values(keys).includes(k))
+    .sort()
+    .reverse();
   Alpine.store(keys.all, {
     ids: allSessionIds,
     getNewSession() {
-      const id = self.crypto.randomUUID();
+      const id = getSessionId();
       allSessionIds.push(id);
-      localStorage[keys.all] = JSON.stringify(allSessionIds);
 
       console.log("new sess", id);
       return id;
@@ -20,33 +29,34 @@ document.addEventListener("alpine:init", () => {
       if (!localStorage[id]) {
         return "N/A";
       }
-      const sess = JSON.parse(localStorage[id])?.lines;
-      if (!sess) {
+      const { lines, date } = JSON.parse(localStorage[id]);
+      if (date) {
+        console.log(date);
+        return new Date(date);
+      }
+      if (!lines) {
         return "N/A";
       }
 
-      const lastEntry = sess[sess.length - 1];
-      if (!lastEntry.date) {
+      const lastEntry = lines[lines.length - 1];
+      if (!lastEntry?.date) {
         return "N/A";
       }
       return new Date(lastEntry.date);
     },
     getSessionName(id) {
       if (!localStorage[id]) {
-        return id.split("-")[0];
+        return id.split("-")[1];
       }
       const sess = JSON.parse(localStorage[id]);
-
-      if (!sess?.name?.length) {
-        console.log("no length");
-        return id.split("-")[0];
-      }
-
       const date = this.getSessionDate(id);
+      const name = sess.name.length ? sess.name : id.split("-")[1];
+
       if (!date) {
-        return sess.name;
+        return name;
       }
-      return `${new Intl.DateTimeFormat("en-US").format(date)} - ${sess.name}`;
+
+      return `${new Date(date).toLocaleDateString()} - 「${name}」`;
     },
   });
 
@@ -55,7 +65,10 @@ document.addEventListener("alpine:init", () => {
     id = Alpine.store(keys.all).getNewSession();
     localStorage[keys.curr] = id;
   }
-  const session = JSON.parse(localStorage[id] ?? '{"name":"","lines":[]}');
+  const session = JSON.parse(
+    localStorage[id] ??
+      `{"name":"","date":${JSON.stringify(new Date())},"lines":[]}`,
+  );
   console.log("initial", id, session);
 
   Alpine.store(keys.curr, {
@@ -98,7 +111,9 @@ document.addEventListener("alpine:init", () => {
         return;
       }
       localStorage[keys.curr] = event.target.value;
-      location.reload();
+      setTimeout(() => {
+        location.reload();
+      }, 10);
     },
   });
 
@@ -134,7 +149,7 @@ document.addEventListener("alpine:init", () => {
       return;
     }
     const item = {
-      id: self.crypto.randomUUID(),
+      id: getSessionId(),
       date: new Date(),
       text: event.data,
     };
@@ -152,81 +167,3 @@ document.addEventListener("alpine:init", () => {
     behavior: "smooth", // Optional: Add smooth scrolling effect
   });
 });
-
-// let currentSessionUUID =
-//   localStorage["currentSession"] ?? self.crypto.randomUUID();
-// localStorage["currentSession"] = currentSessionUUID;
-//
-// console.log("Resuming Session:", currentSessionUUID);
-//
-// function getSession(uuid = currentSessionUUID) {
-//   const session = JSON.parse(localStorage[uuid]);
-//   if (!session) return null;
-//   return session;
-// }
-//
-// function addToTextDiv(item) {
-//   const newTextDiv = document.createElement("div");
-//   newTextDiv.textContent = item.text;
-//   newTextDiv.id = item.id;
-//
-//   const b = document.createElement("button");
-//   b.classList =
-//     "text-slate-500 px-2 cursor-pointer align-center hover:text-slate-200";
-//   b.textContent = "x";
-//   b.addEventListener("click", () => {
-//     let sess = getSession().filter((x) => x.id !== item.id);
-//     localStorage[currentSessionUUID] = JSON.stringify(sess);
-//     const textDiv = document.getElementById(item.id);
-//     textDiv.parentElement.removeChild(textDiv);
-//     resetCounts();
-//   });
-//   // b.addEventListener();
-//
-//   newTextDiv.appendChild(b);
-//   const textDiv = document.getElementById("text");
-//   textDiv.append(newTextDiv);
-//   resetCounts();
-// }
-//
-// function resetCounts() {
-//   const sess = getSession();
-//   const charsCount =
-//     sess?.reduce((sum, item) => {
-//       return sum + item.text.replace(/[「」…]/g, "").length;
-//     }, 0) ?? 0;
-//   const linesCount = sess.length;
-//
-//   document.getElementById("sessionChars").textContent = charsCount;
-//   document.getElementById("sessionLines").textContent = linesCount;
-// }
-//
-// function resetTextDiv() {
-//   if (!localStorage[currentSessionUUID]) {
-//     localStorage[currentSessionUUID] = "[]";
-//   }
-//   const clip = JSON.parse(localStorage[currentSessionUUID]);
-//   document.getElementById("text").innerHTML = "";
-//   for (const item of clip) {
-//     addToTextDiv(item);
-//   }
-//   resetCounts();
-// }
-//
-// function startNewSession() {
-//   const uuid = self.crypto.randomUUID();
-//   console.log("Archiving Old Session:", currentSessionUUID);
-//   console.log("Starting New Session:", uuid);
-//   currentSessionUUID = uuid;
-//   localStorage["currentSession"] = uuid;
-//
-//   resetTextDiv();
-// }
-//
-// // window.onload(() => {
-// //   window.scrollTo({
-// //     top: document.body.scrollHeight,
-// //     behavior: "smooth", // Optional: Add smooth scrolling effect
-// //   });
-// // });
-//

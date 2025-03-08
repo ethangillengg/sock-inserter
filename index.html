@@ -37,7 +37,7 @@
           @change="$store.currentSession.change"
           value="40cc9a40"
           :title="$store.allSessionIds.getSessionDate($store.currentSession.id)"
-          class="max-w-128 min-w-48 w-full"
+          class="max-w-128 w-min"
         >
           <template x-for="id in $store.allSessionIds.ids" :key="id">
             <option
@@ -77,4 +77,3 @@
     </div>
   </body>
 </html>
-
