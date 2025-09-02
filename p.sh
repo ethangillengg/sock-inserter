@@ -2,6 +2,4 @@
 export XDG_RUNTIME_DIR=/run/user/1000
 export WAYLAND_DISPLAY=wayland-1
 
-while :; do
-	wl-paste --watch ./p.sh 2>/dev/null || echo "err"
-done
+wl-paste
